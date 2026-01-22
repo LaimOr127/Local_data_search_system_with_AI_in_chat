@@ -1,0 +1,42 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: assembly
+      POSTGRES_USER: assembly
+      POSTGRES_PASSWORD: assembly
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  app:
+    build: .
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgresql+asyncpg://assembly:assembly@db:5432/assembly
+      USE_PG_TRGM: "true"
+      FUZZY_MIN_SCORE: "85"
+      MAX_CANDIDATES: "50"
+      MAX_RESULTS_PER_INPUT: "3"
+      OLLAMA_BASE_URL: http://ollama:11434
+      OLLAMA_MODEL: qwen2.5:3b
+      ENABLE_LLM: "true"
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+
+volumes:
+  db_data:
+  ollama_data:

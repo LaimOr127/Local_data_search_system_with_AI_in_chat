@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DiGroup — Ассистент сборки</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo">DiGroup</div>
+        <div class="tagline">Минималистичный ассистент расчета</div>
+      </div>
+
+      <button class="btn primary" id="newChatBtn">+ Новый чат</button>
+
+      <div class="section-title">Чаты</div>
+      <div id="chatList" class="chat-list"></div>
+
+      <div class="section-title">Режим</div>
+      <div class="mode-toggle">
+        <label><input type="radio" name="mode" value="auto" checked /> Авто</label>
+        <label><input type="radio" name="mode" value="chat" /> Чат</label>
+        <label><input type="radio" name="mode" value="estimate" /> Расчет</label>
+      </div>
+
+      <div class="section-title">Фильтры</div>
+      <input id="projectCode" class="input" placeholder="Проект (опционально)" />
+      <input id="cabinetCode" class="input" placeholder="Шкаф (опционально)" />
+    </aside>
+
+    <main class="main">
+      <header class="header">
+        <div>
+          <div class="title">DiGroup Assembly AI</div>
+          <div class="subtitle">Чаты, история, быстрый расчет</div>
+        </div>
+        <div class="status" id="status">Готов</div>
+      </header>
+
+      <section class="messages" id="messages"></section>
+
+      <section class="controls">
+        <textarea id="namesInput" class="textarea" placeholder="Наименования (по одному в строке, опционально)"></textarea>
+        <div class="row">
+          <input id="messageInput" class="input" placeholder="Ваше сообщение..." />
+          <button id="sendBtn" class="btn primary">Отправить</button>
+        </div>
+      </section>
+
+      <section class="summary" id="summary"></section>
+    </main>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

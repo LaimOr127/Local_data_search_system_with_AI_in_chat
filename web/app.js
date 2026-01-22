@@ -1,0 +1,205 @@
+const chatListEl = document.getElementById("chatList");
+const messagesEl = document.getElementById("messages");
+const summaryEl = document.getElementById("summary");
+const newChatBtn = document.getElementById("newChatBtn");
+const sendBtn = document.getElementById("sendBtn");
+const messageInput = document.getElementById("messageInput");
+const namesInput = document.getElementById("namesInput");
+const projectCodeInput = document.getElementById("projectCode");
+const cabinetCodeInput = document.getElementById("cabinetCode");
+const statusEl = document.getElementById("status");
+
+const STORAGE_KEY = "digroup_chats";
+
+let chats = loadChats();
+let activeChatId = chats.length ? chats[0].id : null;
+
+if (!activeChatId) {
+  activeChatId = createChat();
+}
+
+renderChatList();
+renderChat();
+
+newChatBtn.addEventListener("click", () => {
+  activeChatId = createChat();
+  renderChatList();
+  renderChat();
+});
+
+sendBtn.addEventListener("click", async () => {
+  const text = messageInput.value.trim();
+  if (!text) return;
+
+  const names = parseNames(namesInput.value);
+  const mode = getMode();
+
+  const chat = getActiveChat();
+  chat.messages.push({ role: "user", content: text });
+  chat.mode = mode;
+  chat.projectCode = projectCodeInput.value.trim();
+  chat.cabinetCode = cabinetCodeInput.value.trim();
+  saveChats();
+  renderChat();
+
+  messageInput.value = "";
+  statusEl.textContent = "Отправка...";
+
+  try {
+    const payload = {
+      message: text,
+      names: names.length ? names : null,
+      history: chat.messages,
+      project_code: chat.projectCode || null,
+      cabinet_code: chat.cabinetCode || null,
+      mode: mode,
+    };
+
+    const response = await fetch("/v1/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.detail || "Ошибка API");
+    }
+    const replyText = data.reply || "(пустой ответ)";
+    chat.messages.push({ role: "assistant", content: replyText });
+    chat.lastData = data.data || null;
+    saveChats();
+    renderChat();
+    renderSummary();
+    statusEl.textContent = "Готов";
+  } catch (err) {
+    chat.messages.push({ role: "assistant", content: `Ошибка запроса: ${err.message}` });
+    saveChats();
+    renderChat();
+    statusEl.textContent = "Ошибка";
+  }
+});
+
+function parseNames(text) {
+  return text
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
+}
+
+function getMode() {
+  const selected = document.querySelector("input[name=mode]:checked");
+  return selected ? selected.value : "auto";
+}
+
+function createChat() {
+  const id = `chat_${Date.now()}`;
+  chats.unshift({
+    id,
+    title: "Новый чат",
+    messages: [],
+    mode: "auto",
+    projectCode: "",
+    cabinetCode: "",
+    lastData: null,
+  });
+  saveChats();
+  return id;
+}
+
+function getActiveChat() {
+  return chats.find((c) => c.id === activeChatId);
+}
+
+function renderChatList() {
+  chatListEl.innerHTML = "";
+  chats.forEach((chat) => {
+    const item = document.createElement("div");
+    item.className = `chat-item ${chat.id === activeChatId ? "active" : ""}`;
+    item.textContent = chat.title;
+    item.addEventListener("click", () => {
+      activeChatId = chat.id;
+      renderChatList();
+      renderChat();
+    });
+    chatListEl.appendChild(item);
+  });
+}
+
+function renderChat() {
+  const chat = getActiveChat();
+  if (!chat) return;
+
+  const lastUser = [...chat.messages].reverse().find((m) => m.role === "user");
+  if (lastUser) {
+    chat.title = lastUser.content.slice(0, 28);
+  }
+
+  messagesEl.innerHTML = "";
+  chat.messages.forEach((msg) => {
+    const row = document.createElement("div");
+    row.className = "message";
+    const role = document.createElement("div");
+    role.className = "role";
+    role.textContent = msg.role === "user" ? "Вы" : "AI";
+    const content = document.createElement("div");
+    content.className = "content";
+    content.textContent = msg.content;
+    row.appendChild(role);
+    row.appendChild(content);
+    messagesEl.appendChild(row);
+  });
+
+  projectCodeInput.value = chat.projectCode || "";
+  cabinetCodeInput.value = chat.cabinetCode || "";
+
+  const modeInput = document.querySelector(`input[name=mode][value=${chat.mode}]`);
+  if (modeInput) modeInput.checked = true;
+
+  renderSummary();
+}
+
+function renderSummary() {
+  const chat = getActiveChat();
+  summaryEl.innerHTML = "";
+  if (!chat || !chat.lastData) return;
+
+  const data = chat.lastData;
+  const block = document.createElement("div");
+  block.className = "block";
+
+  const totalProjects = Object.keys(data.total_time_by_project || {}).length;
+  const totalCabinets = Object.keys(data.total_time_by_cabinet || {}).length;
+
+  block.innerHTML = `
+    <div><strong>Итог:</strong> проектов=${totalProjects}, шкафов=${totalCabinets}</div>
+    <div style="margin-top:6px;"><strong>Время по шкафам:</strong></div>
+    <div>${formatKeyValues(data.total_time_by_cabinet)}</div>
+    <div style="margin-top:6px;"><strong>Время по проектам:</strong></div>
+    <div>${formatKeyValues(data.total_time_by_project)}</div>
+    <div style="margin-top:6px;"><strong>Ненайденные:</strong></div>
+    <div>${(data.not_found_items || []).join(", ") || "—"}</div>
+  `;
+
+  summaryEl.appendChild(block);
+}
+
+function formatKeyValues(obj) {
+  if (!obj) return "—";
+  const entries = Object.entries(obj);
+  if (!entries.length) return "—";
+  return entries.map(([k, v]) => `${k}: ${v} мин`).join("<br>");
+}
+
+function loadChats() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveChats() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(chats));
+}
