@@ -25,7 +25,11 @@ psql -d assembly -f app/db/schema.sql
 
 4) Импорт CSV (пример):
 ```
-python scripts/import_csv.py --path "Маленький пример большой таблицы .csv" --stage-times stage_times.json --default-time 0
+python scripts/import_csv.py --path "Маленький пример большой таблицы .csv" --stats-out import_stats.json
+```
+Инкрементальный импорт (только новые артикулы, без обновления):
+```
+python scripts/import_csv.py --path "Маленький пример большой таблицы .csv" --incremental --stats-out import_stats.json
 ```
 `stage_times.json` — словарь вида `{ "Сборка корпуса": 30, "Дополнительные работы": 10 }`.
 Если в CSV есть столбец `Шаблон врмени в минутах`, он имеет приоритет над JSON и `default-time`,

@@ -175,10 +175,12 @@ async def import_csv(
     error_report_path: Optional[str],
     stats_out_path: Optional[str],
     strict: bool,
+    incremental: bool,
 ) -> None:
     """Основная процедура импорта CSV."""  # основной сценарий
     db_url = _normalize_db_url(settings.database_url)  # приводим URL
     stage_times = _load_stage_times(stage_times_path)  # загружаем справочник
+    existing_articles: set = set()  # артикулы уже в БД
 
     project_cache: Dict[str, int] = {}  # кеш проектов
     cabinet_cache: Dict[tuple, int] = {}  # кеш шкафов
@@ -205,6 +207,11 @@ async def import_csv(
 
     async with asyncpg.create_pool(dsn=db_url, min_size=1, max_size=5) as pool:  # пул соединений
         async with pool.acquire() as conn:  # одно соединение
+            if incremental:  # инкрементальный импорт
+                rows = await conn.fetch("SELECT article FROM items")  # загружаем артикулы из БД
+                existing_articles = {row["article"] for row in rows}  # создаём множество
+                print(f"Инкрементальный режим: уже в БД {len(existing_articles)} артикулов")
+            
             with open(path, "r", encoding="utf-8") as file:  # CSV файл
                 reader = csv.DictReader(file, delimiter=";")  # парсер CSV
                 for row_number, row in enumerate(reader, start=2):  # со 2 строки
@@ -237,6 +244,10 @@ async def import_csv(
                     name = cast(str, name)
                     nom_type = cast(str, nom_type)
                     stage = cast(str, stage)
+
+                    if incremental and article in existing_articles:  # уже в БД
+                        skipped += 1
+                        continue
 
                     name_norm = normalize_text(name)  # нормализация
 
@@ -355,6 +366,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--error-report", help="Путь для CSV отчёта об ошибках")  # ошибки
     parser.add_argument("--stats-out", help="Путь для JSON статистики импорта")  # статистика
     parser.add_argument("--strict", action="store_true", help="Останавливать импорт при первой ошибке")  # строгий режим
+    parser.add_argument("--incremental", action="store_true", help="Импортировать только новые артикулы (не обновлять)")  # инкремент
     return parser.parse_args()  # готовые аргументы
 
 
@@ -368,5 +380,6 @@ if __name__ == "__main__":
             args.error_report,
             args.stats_out,
             args.strict,
+            args.incremental,
         )
     )
