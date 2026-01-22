@@ -28,6 +28,7 @@ class ChatRequest(BaseModel):
     project_code: Optional[str] = None  # фильтр по проекту
     cabinet_code: Optional[str] = None  # фильтр по шкафу
     mode: Literal["auto", "chat", "estimate"] = "auto"  # режим работы
+    use_llm: bool = True  # использовать Ollama для форматирования
 
 
 

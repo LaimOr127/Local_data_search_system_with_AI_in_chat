@@ -4,6 +4,7 @@ const summaryEl = document.getElementById("summary");
 const newChatBtn = document.getElementById("newChatBtn");
 const deleteChatBtn = document.getElementById("deleteChatBtn");
 const clearStorageBtn = document.getElementById("clearStorageBtn");
+const useLLMCheckbox = document.getElementById("useLLM");
 const sendBtn = document.getElementById("sendBtn");
 const messageInput = document.getElementById("messageInput");
 const namesInput = document.getElementById("namesInput");
@@ -64,6 +65,7 @@ sendBtn.addEventListener("click", async () => {
   chat.projectCode = projectCodeInput.value.trim();
   chat.cabinetCode = cabinetCodeInput.value.trim();
   chat.namesText = namesInput.value.trim();
+  chat.useLLM = useLLMCheckbox.checked;
   saveChats();
   renderChat();
 
@@ -79,6 +81,7 @@ sendBtn.addEventListener("click", async () => {
       project_code: chat.projectCode || null,
       cabinet_code: chat.cabinetCode || null,
       mode: mode,
+      use_llm: useLLMCheckbox.checked,
     };
     console.log("Sending payload:", JSON.stringify(payload, null, 2));
 
@@ -92,7 +95,7 @@ sendBtn.addEventListener("click", async () => {
     if (!response.ok) {
       throw new Error(data.detail || "Ошибка API");
     }
-    const replyText = data.reply || "(пустой ответ)";
+    const replyText = data.reply || formatDataAsText(data.data);
     chat.messages.push({ role: "assistant", content: replyText });
     chat.lastData = data.data || null;
     saveChats();
@@ -129,6 +132,7 @@ function createChat() {
     projectCode: "",
     cabinetCode: "",
     namesText: "",
+    useLLM: useLLMCheckbox.checked,
     lastData: null,
   });
   saveChats();
@@ -183,6 +187,7 @@ function renderChat() {
   cabinetCodeInput.value = chat.cabinetCode || "";
   namesInput.value = chat.namesText || "";
   messageInput.value = "";
+  useLLMCheckbox.checked = chat.useLLM !== undefined ? chat.useLLM : true;
 
   const modeInput = document.querySelector(`input[name=mode][value=${chat.mode}]`);
   if (modeInput) modeInput.checked = true;
@@ -220,6 +225,28 @@ function formatKeyValues(obj) {
   const entries = Object.entries(obj);
   if (!entries.length) return "—";
   return entries.map(([k, v]) => `${k}: ${v} мин`).join("<br>");
+}
+
+function formatDataAsText(data) {
+  if (!data) return "(нет данных)";
+  const foundCount = data.found_items?.length || 0;
+  const notFoundCount = data.not_found_items?.length || 0;
+  const totalByCabinet = data.total_time_by_cabinet || {};
+  const totalByProject = data.total_time_by_project || {};
+  
+  let text = `Найдено позиций: ${foundCount}`;
+  if (notFoundCount > 0) {
+    text += `\nНе найдено: ${notFoundCount}`;
+  }
+  text += "\n\nВремя по шкафам:";
+  for (const [k, v] of Object.entries(totalByCabinet)) {
+    text += `\n- ${k}: ${v} мин`;
+  }
+  text += "\n\nВремя по проектам:";
+  for (const [k, v] of Object.entries(totalByProject)) {
+    text += `\n- ${k}: ${v} мин`;
+  }
+  return text;
 }
 
 function loadChats() {

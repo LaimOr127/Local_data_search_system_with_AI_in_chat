@@ -41,7 +41,7 @@ async def format_report(payload: Dict[str, Any]) -> str:
         "stream": False,
     }
 
-    async with httpx.AsyncClient(timeout=60.0) as client:  # клиент HTTP
+    async with httpx.AsyncClient(timeout=120.0) as client:  # клиент HTTP с увеличенным таймаутом
         response = await client.post(  # отправка запроса
             f"{settings.ollama_base_url}/api/generate",
             json=request_data,
@@ -80,7 +80,7 @@ async def format_chat_reply(
         "stream": False,
     }
 
-    async with httpx.AsyncClient(timeout=60.0) as client:  # клиент HTTP
+    async with httpx.AsyncClient(timeout=120.0) as client:  # клиент HTTP с увеличенным таймаутом
         response = await client.post(  # отправка запроса
             f"{settings.ollama_base_url}/api/generate",
             json=request_data,
@@ -109,7 +109,7 @@ async def format_chat_only(message: str, history: list[dict]) -> str:
         "stream": False,
     }
 
-    async with httpx.AsyncClient(timeout=60.0) as client:  # клиент HTTP
+    async with httpx.AsyncClient(timeout=120.0) as client:  # клиент HTTP с увеличенным таймаутом
         response = await client.post(  # отправка запроса
             f"{settings.ollama_base_url}/api/generate",
             json=request_data,

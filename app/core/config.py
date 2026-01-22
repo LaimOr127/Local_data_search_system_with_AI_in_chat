@@ -15,8 +15,8 @@ class Settings(BaseSettings):
     use_pg_trgm: bool = True  # использовать pg_trgm для поиска
 
     fuzzy_min_score: int = 85  # порог похожести
-    max_candidates: int = 50  # кандидатов из БД
-    max_results_per_input: int = 3  # итоговых совпадений
+    max_candidates: int = 30  # кандидатов из БД (уменьшено для скорости)
+    max_results_per_input: int = 1  # итоговых совпадений (только лучший матч)
 
     ollama_base_url: str = "http://localhost:11434"  # локальный Ollama
     ollama_model: str = "qwen2.5:3b"  # модель для генерации текста
