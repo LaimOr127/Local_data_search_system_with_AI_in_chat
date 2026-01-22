@@ -208,7 +208,12 @@ async def import_csv(
             with open(path, "r", encoding="utf-8") as file:  # CSV файл
                 reader = csv.DictReader(file, delimiter=";")  # парсер CSV
                 for row_number, row in enumerate(reader, start=2):  # со 2 строки
-                    mapped = {HEADER_ALIASES.get(k, k): v.strip() for k, v in row.items() if k}  # норм заголовков
+                    mapped = {}
+                    for k, v in row.items():
+                        if not k:
+                            continue
+                        key = k.strip().lstrip("\ufeff")  # убираем BOM и пробелы
+                        mapped[HEADER_ALIASES.get(key, key)] = v.strip()
 
                     project_code = mapped.get("project")
                     cabinet_code = mapped.get("cabinet")

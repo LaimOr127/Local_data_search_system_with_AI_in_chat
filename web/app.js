@@ -2,6 +2,7 @@ const chatListEl = document.getElementById("chatList");
 const messagesEl = document.getElementById("messages");
 const summaryEl = document.getElementById("summary");
 const newChatBtn = document.getElementById("newChatBtn");
+const deleteChatBtn = document.getElementById("deleteChatBtn");
 const sendBtn = document.getElementById("sendBtn");
 const messageInput = document.getElementById("messageInput");
 const namesInput = document.getElementById("namesInput");
@@ -27,18 +28,34 @@ newChatBtn.addEventListener("click", () => {
   renderChat();
 });
 
+deleteChatBtn.addEventListener("click", () => {
+  if (!activeChatId) return;
+  chats = chats.filter((chat) => chat.id !== activeChatId);
+  if (!chats.length) {
+    activeChatId = createChat();
+  } else {
+    activeChatId = chats[0].id;
+  }
+  saveChats();
+  renderChatList();
+  renderChat();
+});
+
 sendBtn.addEventListener("click", async () => {
   const text = messageInput.value.trim();
-  if (!text) return;
-
   const names = parseNames(namesInput.value);
+  const hasNames = names.length > 0;
+  if (!text && !hasNames) return;
+
   const mode = getMode();
 
   const chat = getActiveChat();
-  chat.messages.push({ role: "user", content: text });
+  const userContent = text || `Позиции (${names.length}):\n${names.join("\n")}`;
+  chat.messages.push({ role: "user", content: userContent });
   chat.mode = mode;
   chat.projectCode = projectCodeInput.value.trim();
   chat.cabinetCode = cabinetCodeInput.value.trim();
+  chat.namesText = namesInput.value.trim();
   saveChats();
   renderChat();
 
@@ -47,7 +64,7 @@ sendBtn.addEventListener("click", async () => {
 
   try {
     const payload = {
-      message: text,
+      message: text || "Позиции для расчёта",
       names: names.length ? names : null,
       history: chat.messages,
       project_code: chat.projectCode || null,
@@ -101,6 +118,7 @@ function createChat() {
     mode: "auto",
     projectCode: "",
     cabinetCode: "",
+    namesText: "",
     lastData: null,
   });
   saveChats();
@@ -138,7 +156,7 @@ function renderChat() {
   messagesEl.innerHTML = "";
   chat.messages.forEach((msg) => {
     const row = document.createElement("div");
-    row.className = "message";
+    row.className = `message ${msg.role === "user" ? "user" : "assistant"}`;
     const role = document.createElement("div");
     role.className = "role";
     role.textContent = msg.role === "user" ? "Вы" : "AI";
@@ -152,6 +170,8 @@ function renderChat() {
 
   projectCodeInput.value = chat.projectCode || "";
   cabinetCodeInput.value = chat.cabinetCode || "";
+  namesInput.value = chat.namesText || "";
+  messageInput.value = "";
 
   const modeInput = document.querySelector(`input[name=mode][value=${chat.mode}]`);
   if (modeInput) modeInput.checked = true;

@@ -29,6 +29,8 @@ body {
   border-right: 1px solid var(--border);
   background: var(--panel);
   padding: 20px;
+  overflow-y: auto;
+  max-height: 100vh;
 }
 
 .brand .logo {
@@ -37,11 +39,6 @@ body {
   letter-spacing: 0.5px;
 }
 
-.brand .tagline {
-  font-size: 12px;
-  color: var(--muted);
-  margin-top: 6px;
-}
 
 .section-title {
   font-size: 12px;
@@ -67,6 +64,10 @@ body {
 .chat-item.active {
   border-color: var(--accent);
   background: #111824;
+}
+
+#deleteChatBtn {
+  margin-top: 8px;
 }
 
 .mode-toggle {
@@ -150,6 +151,15 @@ body {
   margin-bottom: 14px;
   display: flex;
   gap: 10px;
+}
+
+.message.user {
+  justify-content: flex-end;
+}
+
+.message.user .content {
+  background: #1b2230;
+  border-color: #2b3650;
 }
 
 .message .role {

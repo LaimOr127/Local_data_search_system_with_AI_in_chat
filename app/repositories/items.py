@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession  # асинхронная сес
 
 
 # Базовый SELECT с нужными JOIN для расчетов.
-BASE_SELECT = """  # общий селект для всех выборок
+BASE_SELECT = """
 SELECT
     i.id,
     i.name,
