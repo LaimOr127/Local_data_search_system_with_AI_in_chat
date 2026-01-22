@@ -115,7 +115,8 @@ body {
 .main {
   display: grid;
   grid-template-rows: auto 1fr auto auto;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
 }
 
 .header {
@@ -145,6 +146,8 @@ body {
 .messages {
   padding: 20px;
   overflow-y: auto;
+  flex: 1;
+  min-height: 0;
 }
 
 .message {

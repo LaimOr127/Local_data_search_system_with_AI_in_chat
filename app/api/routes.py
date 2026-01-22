@@ -63,6 +63,10 @@ async def chat_endpoint(
     session: AsyncSession = Depends(get_session),
 ) -> ChatResponse:
     """Интерактивный чат: с поиском или без, в зависимости от режима."""  # чат-эндпоинт
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info(f"Chat: mode={payload.mode}, names_count={len(payload.names) if payload.names else 0}")
+    
     reply = ""  # текст ответа
     data: EstimateResponse  # данные расчета
 

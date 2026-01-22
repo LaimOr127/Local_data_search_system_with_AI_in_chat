@@ -3,6 +3,7 @@ const messagesEl = document.getElementById("messages");
 const summaryEl = document.getElementById("summary");
 const newChatBtn = document.getElementById("newChatBtn");
 const deleteChatBtn = document.getElementById("deleteChatBtn");
+const clearStorageBtn = document.getElementById("clearStorageBtn");
 const sendBtn = document.getElementById("sendBtn");
 const messageInput = document.getElementById("messageInput");
 const namesInput = document.getElementById("namesInput");
@@ -41,6 +42,13 @@ deleteChatBtn.addEventListener("click", () => {
   renderChat();
 });
 
+clearStorageBtn.addEventListener("click", () => {
+  if (confirm("Очистить все чаты?")) {
+    localStorage.removeItem(STORAGE_KEY);
+    location.reload();
+  }
+});
+
 sendBtn.addEventListener("click", async () => {
   const text = messageInput.value.trim();
   const names = parseNames(namesInput.value);
@@ -63,14 +71,16 @@ sendBtn.addEventListener("click", async () => {
   statusEl.textContent = "Отправка...";
 
   try {
+    const historyWithoutLast = chat.messages.slice(0, -1);
     const payload = {
       message: text || "Позиции для расчёта",
       names: names.length ? names : null,
-      history: chat.messages,
+      history: historyWithoutLast,
       project_code: chat.projectCode || null,
       cabinet_code: chat.cabinetCode || null,
       mode: mode,
     };
+    console.log("Sending payload:", JSON.stringify(payload, null, 2));
 
     const response = await fetch("/v1/chat", {
       method: "POST",
@@ -167,6 +177,7 @@ function renderChat() {
     row.appendChild(content);
     messagesEl.appendChild(row);
   });
+  messagesEl.scrollTop = messagesEl.scrollHeight;
 
   projectCodeInput.value = chat.projectCode || "";
   cabinetCodeInput.value = chat.cabinetCode || "";
