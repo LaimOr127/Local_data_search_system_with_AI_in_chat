@@ -61,16 +61,22 @@ async def format_chat_reply(
     if not settings.enable_llm:
         return ""  # LLM отключен
 
+    by_cabinet = payload.get("total_time_by_cabinet", {})
+    by_project = payload.get("total_time_by_project", {})
+    total_time = sum(by_cabinet.values())  # общее время (сумма по шкафам)
+    
     summary = {
         "found_count": len(payload.get("found_items", [])),
         "not_found": payload.get("not_found_items", []),
-        "total_by_cabinet": payload.get("total_time_by_cabinet", {}),
-        "total_by_project": payload.get("total_time_by_project", {}),
+        "total_time_minutes": total_time,
+        "total_by_cabinet": by_cabinet,
+        "total_by_project": by_project,
     }
     user_prompt = (  # промпт с историей и данными
         f"Сообщение пользователя: {message}. "
         f"Результаты расчёта: {summary}. "
-        "Сформируй понятный ответ с указанием времени по шкафам и проектам."
+        "Сформируй понятный ответ. ОБЯЗАТЕЛЬНО укажи общее время (total_time_minutes) в начале, "
+        "затем разбивку по шкафам и проектам."
     )
 
     request_data = {  # тело запроса к Ollama

@@ -206,9 +206,13 @@ function renderSummary() {
 
   const totalProjects = Object.keys(data.total_time_by_project || {}).length;
   const totalCabinets = Object.keys(data.total_time_by_cabinet || {}).length;
+  const totalTime = Object.values(data.total_time_by_cabinet || {}).reduce((a, b) => a + b, 0);
+  const hours = Math.floor(totalTime / 60);
+  const mins = totalTime % 60;
 
   block.innerHTML = `
-    <div><strong>Итог:</strong> проектов=${totalProjects}, шкафов=${totalCabinets}</div>
+    <div><strong>Общее время:</strong> ${totalTime} мин (~${hours} ч ${mins} мин)</div>
+    <div style="margin-top:6px;"><strong>Итог:</strong> проектов=${totalProjects}, шкафов=${totalCabinets}</div>
     <div style="margin-top:6px;"><strong>Время по шкафам:</strong></div>
     <div>${formatKeyValues(data.total_time_by_cabinet)}</div>
     <div style="margin-top:6px;"><strong>Время по проектам:</strong></div>
@@ -233,8 +237,10 @@ function formatDataAsText(data) {
   const notFoundCount = data.not_found_items?.length || 0;
   const totalByCabinet = data.total_time_by_cabinet || {};
   const totalByProject = data.total_time_by_project || {};
+  const totalTime = Object.values(totalByCabinet).reduce((a, b) => a + b, 0);
   
-  let text = `Найдено позиций: ${foundCount}`;
+  let text = `Найдено позиций: ${foundCount}\n`;
+  text += `Общее время: ${totalTime} мин (~${Math.floor(totalTime / 60)} ч ${totalTime % 60} мин)`;
   if (notFoundCount > 0) {
     text += `\nНе найдено: ${notFoundCount}`;
   }

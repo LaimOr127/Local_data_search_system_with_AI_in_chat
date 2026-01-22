@@ -18,8 +18,10 @@ def formatDataAsTextFallback(data_dict: dict) -> str:
     not_found = data_dict.get("not_found_items", [])
     by_cabinet = data_dict.get("total_time_by_cabinet", {})
     by_project = data_dict.get("total_time_by_project", {})
+    total_time = sum(by_cabinet.values())  # общее время
     
     lines = [f"Найдено позиций: {found}"]
+    lines.append(f"Общее время: {total_time} мин (~{total_time // 60} ч {total_time % 60} мин)")
     if not_found:
         lines.append(f"Не найдено: {len(not_found)}")
     lines.append("\nВремя по шкафам:")
