@@ -20,10 +20,10 @@ SYSTEM_PROMPT = (  # системный промпт для отчёта
 )
 
 CHAT_SYSTEM_PROMPT = (  # системный промпт для чата
-    "Ты — ассистент для интерактивного чата по расчету времени сборки. "
-    "Отвечай кратко и по делу. Используй данные расчёта. "
-    "Сформируй итог: общая оценка времени, разбиение по шкафам, "
-    "и отметь ненайденные позиции (если есть)."
+    "Ты — ассистент для интерактивного чата по расчету времени сборки оборудования. "
+    "Твоя задача — сформировать понятный и структурированный ответ на русском языке. "
+    "Всегда начинай с общего времени, затем разбивку по шкафам и проектам. "
+    "Используй данные из результатов расчёта. Будь конкретным и информативным."
 )
 
 
@@ -73,19 +73,29 @@ async def format_chat_reply(
     by_cabinet = payload.get("total_time_by_cabinet", {})
     by_project = payload.get("total_time_by_project", {})
     total_time = sum(by_cabinet.values())  # общее время (сумма по шкафам)
+    not_found_items = payload.get("not_found_items", [])
     
     summary = {
         "found_count": len(payload.get("found_items", [])),
-        "not_found": payload.get("not_found_items", []),
+        "not_found": not_found_items,
         "total_time_minutes": total_time,
         "total_by_cabinet": by_cabinet,
         "total_by_project": by_project,
     }
+    # Форматируем данные для более понятного промпта
+    cabinet_lines = "\n".join([f"- Шкаф \"{k}\": {v} минут" for k, v in by_cabinet.items()])
+    project_lines = "\n".join([f"- Проект \"{k}\": {v} минут" for k, v in by_project.items()])
+    not_found_text = ", ".join(not_found_items) if not_found_items else "нет"
+    
     user_prompt = (  # промпт с историей и данными
-        f"Сообщение пользователя: {message}. "
-        f"Результаты расчёта: {summary}. "
-        "Сформируй понятный ответ. ОБЯЗАТЕЛЬНО укажи общее время (total_time_minutes) в начале, "
-        "затем разбивку по шкафам и проектам."
+        f"Пользователь написал: {message}\n\n"
+        f"Результаты расчёта времени сборки:\n"
+        f"Найдено позиций: {summary['found_count']}\n"
+        f"Общее время: {total_time} минут (~{total_time // 60} часов {total_time % 60} минут)\n\n"
+        f"Время по шкафам:\n{cabinet_lines}\n\n"
+        f"Время по проектам:\n{project_lines}\n\n"
+        f"Ненайденные позиции: {not_found_text}\n\n"
+        "Сформируй понятный ответ на русском языке. Начни с общего времени, затем разбивку по шкафам и проектам."
     )
 
     request_data = {  # тело запроса к Ollama
