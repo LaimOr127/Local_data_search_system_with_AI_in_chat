@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     database_url: str  # строка подключения к PostgreSQL
     use_pg_trgm: bool = True  # использовать pg_trgm для поиска
 
-    fuzzy_min_score: int = 85  # порог похожести
+    fuzzy_min_score: int = 70  # порог похожести (снижен для более гибкого поиска)
     max_candidates: int = 30  # кандидатов из БД (уменьшено для скорости)
     max_results_per_input: int = 1  # итоговых совпадений (только лучший матч)
 

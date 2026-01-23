@@ -17,7 +17,7 @@ services:
     environment:
       DATABASE_URL: postgresql+asyncpg://assembly:assembly@db:5432/assembly
       USE_PG_TRGM: "true"
-      FUZZY_MIN_SCORE: "85"
+      FUZZY_MIN_SCORE: "70"
       MAX_CANDIDATES: "30"
       MAX_RESULTS_PER_INPUT: "1"
       OLLAMA_BASE_URL: http://ollama:11434

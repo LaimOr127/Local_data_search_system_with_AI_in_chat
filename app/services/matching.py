@@ -15,7 +15,17 @@ def rank_candidates(
     scored = []  # список (оценка, объект)
     for candidate in candidates:
         name_norm = candidate.get("name_norm") or ""  # нормализованное имя
-        score = int(fuzz.WRatio(query_norm, name_norm))  # расчёт похожести
+        
+        # Используем несколько метрик и берём максимальную для более точного поиска
+        ratio_score = fuzz.ratio(query_norm, name_norm)  # точное сравнение
+        partial_score = fuzz.partial_ratio(query_norm, name_norm)  # частичное совпадение
+        token_sort_score = fuzz.token_sort_ratio(query_norm, name_norm)  # по токенам (порядок не важен)
+        token_set_score = fuzz.token_set_ratio(query_norm, name_norm)  # по множеству токенов
+        wr_score = fuzz.WRatio(query_norm, name_norm)  # взвешенное соотношение
+        
+        # Берём максимальную оценку из всех метрик для более гибкого поиска
+        score = int(max(ratio_score, partial_score, token_sort_score, token_set_score, wr_score))
+        
         scored.append((score, candidate))  # сохраняем оценку
     scored.sort(key=lambda x: x[0], reverse=True)  # сортируем по убыванию
     return scored  # возвращаем ранжирование

@@ -161,7 +161,7 @@ async def chat_endpoint(
                     data.model_dump(),
                 )
             except Exception as e:
-                logger.error(f"Ollama error: {e}")
+                logger.error(f"Ollama error in format_chat_reply: {e}", exc_info=True)
                 reply = formatDataAsTextFallback(data.model_dump())  # fallback на текстовый ответ
         else:
             reply = formatDataAsTextFallback(data.model_dump())  # текстовый ответ без LLM
@@ -182,8 +182,8 @@ async def chat_endpoint(
                     [msg.model_dump() for msg in payload.history],
                 )
             except Exception as e:
-                logger.error(f"Ollama error: {e}")
-                reply = "Не удалось сформировать ответ от Ollama. Попробуйте отключить Ollama в настройках."
+                logger.error(f"Ollama error in format_chat_only: {e}", exc_info=True)
+                reply = f"Не удалось сформировать ответ от Ollama: {str(e)}. Попробуйте отключить Ollama в настройках."
         else:
             reply = "Режим без LLM. Включите Ollama в настройках для генерации текстовых ответов."  # LLM выключен
 

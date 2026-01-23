@@ -41,15 +41,24 @@ async def format_report(payload: Dict[str, Any]) -> str:
         "stream": False,
     }
 
-    async with httpx.AsyncClient(timeout=120.0) as client:  # клиент HTTP с увеличенным таймаутом
-        response = await client.post(  # отправка запроса
-            f"{settings.ollama_base_url}/api/generate",
-            json=request_data,
-        )
-        response.raise_for_status()  # ошибка при не-2xx
-        data = response.json()  # ответ модели
-
-    return data.get("response", "").strip()  # готовый текст
+    try:
+        async with httpx.AsyncClient(timeout=120.0) as client:  # клиент HTTP с увеличенным таймаутом
+            response = await client.post(  # отправка запроса
+                f"{settings.ollama_base_url}/api/generate",
+                json=request_data,
+            )
+            response.raise_for_status()  # ошибка при не-2xx
+            data = response.json()  # ответ модели
+            result = data.get("response", "").strip()  # готовый текст
+            if not result:
+                raise ValueError("Ollama вернул пустой ответ")  # проверка на пустой ответ
+            return result  # возвращаем результат
+    except httpx.TimeoutException:
+        raise Exception(f"Ollama timeout: не ответила за 120 секунд")  # таймаут
+    except httpx.HTTPStatusError as e:
+        raise Exception(f"Ollama HTTP error: {e.response.status_code} - {e.response.text}")  # HTTP ошибка
+    except Exception as e:
+        raise Exception(f"Ollama error: {str(e)}")  # прочие ошибки
 
 
 async def format_chat_reply(
@@ -86,15 +95,24 @@ async def format_chat_reply(
         "stream": False,
     }
 
-    async with httpx.AsyncClient(timeout=120.0) as client:  # клиент HTTP с увеличенным таймаутом
-        response = await client.post(  # отправка запроса
-            f"{settings.ollama_base_url}/api/generate",
-            json=request_data,
-        )
-        response.raise_for_status()  # ошибка при не-2xx
-        data = response.json()  # ответ модели
-
-    return data.get("response", "").strip()  # готовый текст
+    try:
+        async with httpx.AsyncClient(timeout=120.0) as client:  # клиент HTTP с увеличенным таймаутом
+            response = await client.post(  # отправка запроса
+                f"{settings.ollama_base_url}/api/generate",
+                json=request_data,
+            )
+            response.raise_for_status()  # ошибка при не-2xx
+            data = response.json()  # ответ модели
+            result = data.get("response", "").strip()  # готовый текст
+            if not result:
+                raise ValueError("Ollama вернул пустой ответ")  # проверка на пустой ответ
+            return result  # возвращаем результат
+    except httpx.TimeoutException:
+        raise Exception(f"Ollama timeout: не ответила за 120 секунд")  # таймаут
+    except httpx.HTTPStatusError as e:
+        raise Exception(f"Ollama HTTP error: {e.response.status_code} - {e.response.text}")  # HTTP ошибка
+    except Exception as e:
+        raise Exception(f"Ollama error: {str(e)}")  # прочие ошибки
 
 
 async def format_chat_only(message: str, history: list[dict]) -> str:
@@ -115,12 +133,21 @@ async def format_chat_only(message: str, history: list[dict]) -> str:
         "stream": False,
     }
 
-    async with httpx.AsyncClient(timeout=120.0) as client:  # клиент HTTP с увеличенным таймаутом
-        response = await client.post(  # отправка запроса
-            f"{settings.ollama_base_url}/api/generate",
-            json=request_data,
-        )
-        response.raise_for_status()  # ошибка при не-2xx
-        data = response.json()  # ответ модели
-
-    return data.get("response", "").strip()  # готовый текст
+    try:
+        async with httpx.AsyncClient(timeout=120.0) as client:  # клиент HTTP с увеличенным таймаутом
+            response = await client.post(  # отправка запроса
+                f"{settings.ollama_base_url}/api/generate",
+                json=request_data,
+            )
+            response.raise_for_status()  # ошибка при не-2xx
+            data = response.json()  # ответ модели
+            result = data.get("response", "").strip()  # готовый текст
+            if not result:
+                raise ValueError("Ollama вернул пустой ответ")  # проверка на пустой ответ
+            return result  # возвращаем результат
+    except httpx.TimeoutException:
+        raise Exception(f"Ollama timeout: не ответила за 120 секунд")  # таймаут
+    except httpx.HTTPStatusError as e:
+        raise Exception(f"Ollama HTTP error: {e.response.status_code} - {e.response.text}")  # HTTP ошибка
+    except Exception as e:
+        raise Exception(f"Ollama error: {str(e)}")  # прочие ошибки
