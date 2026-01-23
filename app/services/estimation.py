@@ -49,6 +49,7 @@ async def estimate(
     not_found: List[str] = []  # список ненайденных
     debug: Dict[str, List[Dict]] = {"matches": []}  # диагностика
     seen_articles_per_input: Dict[str, set] = {}  # отслеживаем артикулы для каждого входного запроса
+    global_seen_articles: set = set()  # глобальная дедупликация: один артикул = одна позиция
 
     for user_input, norm in zip(names, normalized):
         seen_articles = seen_articles_per_input.setdefault(user_input, set())  # артикулы для этого запроса
@@ -56,11 +57,14 @@ async def estimate(
         exact = exact_by_norm.get(norm)  # проверяем точные совпадения
         if exact:
             debug["matches"].append({"input": user_input, "exact": len(exact), "fuzzy": 0})  # лог
+            # Для точных совпадений выбираем первый (лучший) вариант, если артикул еще не использован
             for row in exact:
                 article = row.get("article")  # артикул позиции
-                if article and article not in seen_articles:  # проверяем, не добавляли ли уже этот артикул
-                    seen_articles.add(article)  # отмечаем как использованный
+                if article and article not in global_seen_articles:  # глобальная проверка
+                    global_seen_articles.add(article)  # отмечаем глобально
+                    seen_articles.add(article)  # отмечаем для этого запроса
                     found_items.append(_row_to_match(user_input, row, 100))  # 100% совпадение
+                    break  # берем только первый, если артикул еще не использован
             continue  # дальше не ищем
 
         tokens = [token for token in norm.split(" ") if token]  # токены для fallback
@@ -92,12 +96,15 @@ async def estimate(
             continue  # идём дальше
 
         debug["matches"].append({"input": user_input, "exact": 0, "fuzzy": len(best)})  # лог
+        # Для fuzzy совпадений берем только первый (лучший) вариант, если артикул еще не использован
         for row in best:
             article = row.get("article")  # артикул позиции
-            if article and article not in seen_articles:  # проверяем, не добавляли ли уже этот артикул
-                seen_articles.add(article)  # отмечаем как использованный
+            if article and article not in global_seen_articles:  # глобальная проверка
+                global_seen_articles.add(article)  # отмечаем глобально
+                seen_articles.add(article)  # отмечаем для этого запроса
                 score = row.pop("match_score")  # забираем оценку
                 found_items.append(_row_to_match(user_input, row, score))  # добавляем в ответ
+                break  # берем только первый, если артикул еще не использован
 
     total_by_cabinet: Dict[str, int] = defaultdict(int)  # сумма по шкафам
     total_by_project: Dict[str, int] = defaultdict(int)  # сумма по проектам
