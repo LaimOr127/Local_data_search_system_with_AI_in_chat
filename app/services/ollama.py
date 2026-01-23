@@ -130,10 +130,28 @@ async def format_chat_only(message: str, history: list[dict]) -> str:
     if not settings.enable_llm:
         return ""  # LLM отключен
 
+    # Форматируем историю для более понятного промпта
+    history_text = ""
+    if history:
+        history_lines = []
+        for msg in history[-5:]:  # последние 5 сообщений
+            role = msg.get('role', '')
+            content = msg.get('content', '')
+            if role == 'user':
+                history_lines.append(f"Пользователь: {content}")
+            elif role == 'assistant':
+                history_lines.append(f"Ассистент: {content}")
+        history_text = "\n".join(history_lines)
+    
+    history_part = ""
+    if history_text:
+        history_part = f"История разговора:\n{history_text}\n\n"
+    
     user_prompt = (  # промпт без данных поиска
-        f"Сообщение пользователя: {message}. "
-        f"История: {history}. "
-        "Ответь как ассистент. Поиск и расчёты не выполняй."
+        f"Пользователь написал: {message}\n\n"
+        f"{history_part}"
+        "Ответь как ассистент по расчету времени сборки оборудования. "
+        "Будь кратким и полезным. Если пользователь спрашивает о расчете, напомни, что нужно отправить список позиций."
     )
 
     request_data = {  # тело запроса к Ollama

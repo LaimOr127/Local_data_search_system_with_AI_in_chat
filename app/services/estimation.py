@@ -48,13 +48,19 @@ async def estimate(
     found_items: List[Dict] = []  # найденные позиции
     not_found: List[str] = []  # список ненайденных
     debug: Dict[str, List[Dict]] = {"matches": []}  # диагностика
+    seen_articles_per_input: Dict[str, set] = {}  # отслеживаем артикулы для каждого входного запроса
 
     for user_input, norm in zip(names, normalized):
+        seen_articles = seen_articles_per_input.setdefault(user_input, set())  # артикулы для этого запроса
+        
         exact = exact_by_norm.get(norm)  # проверяем точные совпадения
         if exact:
             debug["matches"].append({"input": user_input, "exact": len(exact), "fuzzy": 0})  # лог
             for row in exact:
-                found_items.append(_row_to_match(user_input, row, 100))  # 100% совпадение
+                article = row.get("article")  # артикул позиции
+                if article and article not in seen_articles:  # проверяем, не добавляли ли уже этот артикул
+                    seen_articles.add(article)  # отмечаем как использованный
+                    found_items.append(_row_to_match(user_input, row, 100))  # 100% совпадение
             continue  # дальше не ищем
 
         tokens = [token for token in norm.split(" ") if token]  # токены для fallback
@@ -87,8 +93,11 @@ async def estimate(
 
         debug["matches"].append({"input": user_input, "exact": 0, "fuzzy": len(best)})  # лог
         for row in best:
-            score = row.pop("match_score")  # забираем оценку
-            found_items.append(_row_to_match(user_input, row, score))  # добавляем в ответ
+            article = row.get("article")  # артикул позиции
+            if article and article not in seen_articles:  # проверяем, не добавляли ли уже этот артикул
+                seen_articles.add(article)  # отмечаем как использованный
+                score = row.pop("match_score")  # забираем оценку
+                found_items.append(_row_to_match(user_input, row, score))  # добавляем в ответ
 
     total_by_cabinet: Dict[str, int] = defaultdict(int)  # сумма по шкафам
     total_by_project: Dict[str, int] = defaultdict(int)  # сумма по проектам
