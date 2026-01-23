@@ -145,7 +145,8 @@ async def format_chat_only(message: str, history: list[dict]) -> str:
     
     history_part = ""
     if history_text:
-        history_part = f"История разговора:\n{history_text}\n\n"
+        newline = "\n"  # выносим \n в переменную для f-строки
+        history_part = f"История разговора:{newline}{history_text}{newline}{newline}"
     
     user_prompt = (  # промпт без данных поиска
         f"Пользователь написал: {message}\n\n"
