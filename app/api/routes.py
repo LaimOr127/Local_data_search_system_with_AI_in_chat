@@ -153,6 +153,7 @@ async def chat_endpoint(
             reply = "Произошла ошибка при расчёте. Проверьте входные данные и отправьте повторно."
             return ChatResponse(reply=reply, data=data)
 
+        # Сначала всегда возвращаем результаты поиска, затем пытаемся форматировать через ИИ
         if settings.enable_llm and payload.use_llm:
             try:
                 reply = await format_chat_reply(  # ответ с учетом расчетов
@@ -160,11 +161,19 @@ async def chat_endpoint(
                     [msg.model_dump() for msg in payload.history],
                     data.model_dump(),
                 )
+                # Добавляем предупреждение, если есть ненайденные позиции
+                if data.not_found_items:
+                    reply += f"\n\n⚠️ Внимание: не найдено {len(data.not_found_items)} позиций."
             except Exception as e:
                 logger.error(f"Ollama error in format_chat_reply: {e}", exc_info=True)
-                reply = formatDataAsTextFallback(data.model_dump())  # fallback на текстовый ответ
+                # При ошибке ИИ используем fallback, но данные поиска уже есть в data
+                reply = formatDataAsTextFallback(data.model_dump())
+                if data.not_found_items:
+                    reply += f"\n\n⚠️ Внимание: не найдено {len(data.not_found_items)} позиций."
         else:
             reply = formatDataAsTextFallback(data.model_dump())  # текстовый ответ без LLM
+            if data.not_found_items:
+                reply += f"\n\n⚠️ Внимание: не найдено {len(data.not_found_items)} позиций."
     else:
         data = EstimateResponse(  # пустой расчет
             found_items=[],
@@ -175,16 +184,42 @@ async def chat_endpoint(
             warnings=["Поиск не выполнялся, список наименований не передан."],
             raw_debug=None,
         )
+        # В режиме chat без поиска - просто общение с ИИ
         if settings.enable_llm and payload.use_llm:
             try:
                 reply = await format_chat_only(  # просто чат
                     payload.message,
                     [msg.model_dump() for msg in payload.history],
                 )
+                if not reply or len(reply.strip()) < 10:  # проверка на пустой/короткий ответ
+                    raise ValueError("ИИ вернул слишком короткий ответ")
             except Exception as e:
                 logger.error(f"Ollama error in format_chat_only: {e}", exc_info=True)
-                reply = f"Не удалось сформировать ответ от Ollama: {str(e)}. Попробуйте отключить Ollama в настройках."
+                # При ошибке ИИ возвращаем дружелюбное сообщение с подсказкой
+                error_msg = str(e)
+                if "model" in error_msg.lower() or "not found" in error_msg.lower():
+                    reply = (
+                        f"Модель '{settings.ollama_model}' не найдена в Ollama. "
+                        f"Загрузите модель командой: ollama pull {settings.ollama_model}\n\n"
+                        "Или отправьте список позиций для расчета времени сборки - "
+                        "система работает и без ИИ."
+                    )
+                elif "timeout" in error_msg.lower():
+                    reply = (
+                        "ИИ не ответил в течение ожидаемого времени. "
+                        "Попробуйте отправить список позиций для расчета времени сборки - "
+                        "основная функциональность работает без ИИ."
+                    )
+                else:
+                    reply = (
+                        "Сейчас не могу использовать ИИ для ответа. "
+                        "Попробуйте отправить список позиций в поле 'Наименования' для расчета времени сборки - "
+                        "это работает без ИИ. Или отключите Ollama в настройках."
+                    )
         else:
-            reply = "Режим без LLM. Включите Ollama в настройках для генерации текстовых ответов."  # LLM выключен
+            reply = (
+                "Для расчета времени сборки отправьте список позиций в поле 'Наименования'. "
+                "Для общения с ИИ включите Ollama в настройках."
+            )
 
     return ChatResponse(reply=reply, data=data)  # итоговый ответ

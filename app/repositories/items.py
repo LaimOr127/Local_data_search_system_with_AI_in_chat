@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession  # асинхронная сес
 
 
 # Базовый SELECT с нужными JOIN для расчетов.
+# Время вычисляется как: operation.time_template_minutes * item.total_quantity
 BASE_SELECT = """
 SELECT
     i.id,
@@ -15,14 +16,21 @@ SELECT
     i.article,
     c.cabinet_code,
     p.project_code,
-    nt.type_name,
+    nt.type_code AS nomenclature_type_code,
+    nt.type_name AS nomenclature_type,
+    s.stage_code,
     s.stage_name,
-    i.assembly_time_minutes
+    op.operation_code,
+    op.operation_name,
+    i.quantity_per_unit,
+    i.total_quantity,
+    (op.time_template_minutes * i.total_quantity) AS assembly_time_minutes
 FROM items i
 JOIN cabinets c ON c.id = i.cabinet_id
 JOIN projects p ON p.id = c.project_id
 JOIN nomenclature_types nt ON nt.id = i.nomenclature_type_id
 JOIN stages s ON s.id = nt.stage_id
+JOIN operations op ON op.id = i.operation_id
 """
 
 

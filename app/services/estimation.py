@@ -20,9 +20,15 @@ def _row_to_match(user_input: str, row: Dict, score: int) -> Dict:
         "article": row.get("article"),  # артикул
         "cabinet": row.get("cabinet_code"),  # шкаф
         "project": row.get("project_code"),  # проект
-        "nomenclature_type": row.get("type_name"),  # вид номенклатуры
+        "nomenclature_type_code": row.get("nomenclature_type_code"),  # код вида номенклатуры
+        "nomenclature_type": row.get("nomenclature_type"),  # вид номенклатуры
+        "stage_code": row.get("stage_code"),  # код этапа
         "stage": row.get("stage_name"),  # этап
-        "time_per_unit": row.get("assembly_time_minutes"),  # время по позиции
+        "operation_code": row.get("operation_code"),  # код операции
+        "operation_name": row.get("operation_name"),  # наименование операции
+        "quantity_per_unit": row.get("quantity_per_unit", 1),  # количество в 1 изделии
+        "total_quantity": row.get("total_quantity", 1),  # итоговое количество
+        "time_per_unit": row.get("assembly_time_minutes"),  # время по позиции (уже умножено на total_quantity)
     }
 
 

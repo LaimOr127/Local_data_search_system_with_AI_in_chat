@@ -1,18 +1,152 @@
-.env
-.venv/
+# Python
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environments
+.venv/
+venv/
+ENV/
+env/
+.ENV
+.env.local
+.env.*.local
+
+# Environment variables
+.env
+.env.example
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+.settings/
+*.sublime-project
+*.sublime-workspace
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pytest
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.hypothesis/
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# Node.js (for web frontend)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# Web build outputs
+web/dist/
+web/build/
+
+# Logs
 *.log
+logs/
+*.log.*
+
+# Database
 *.db
 *.sqlite
 *.sqlite3
+*.sql
+
+# OS
 .DS_Store
-.idea/
-.vscode/
-node_modules/
-terminals/
-web/dist/
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Docker
+.dockerignore
+
+# Project specific
 import_errors.csv
 import_stats.json
+stage_times.json
+*.csv.bak
+*.json.bak
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.swp
+*~
+
+# Cache
+.cache/
+*.cache
+
+# PostgreSQL dumps
+*.dump
+*.sql.gz
+
+# Ollama models (if downloaded locally)
+models/
+*.gguf
+
+# Terminals
+terminals/

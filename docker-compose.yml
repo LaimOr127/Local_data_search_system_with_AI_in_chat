@@ -6,7 +6,7 @@ services:
       POSTGRES_USER: assembly
       POSTGRES_PASSWORD: assembly
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
 
@@ -20,11 +20,11 @@ services:
       FUZZY_MIN_SCORE: "70"
       MAX_CANDIDATES: "30"
       MAX_RESULTS_PER_INPUT: "1"
-      OLLAMA_BASE_URL: http://ollama:11434
-      OLLAMA_MODEL: qwen2.5:3b
+      OLLAMA_BASE_URL: http://host.docker.internal:11434
+      OLLAMA_MODEL: ministral-3:3b
       ENABLE_LLM: "true"
     ports:
-      - "8000:8000"
+      - "8001:8000"
     volumes:
       - .:/app
 

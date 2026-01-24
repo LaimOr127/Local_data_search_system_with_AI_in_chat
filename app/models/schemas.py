@@ -41,9 +41,15 @@ class MatchedItem(BaseModel):
     article: str  # артикул
     cabinet: str  # шкаф
     project: str  # проект
+    nomenclature_type_code: Optional[int] = None  # код вида номенклатуры
     nomenclature_type: str  # вид номенклатуры
+    stage_code: Optional[int] = None  # код этапа
     stage: str  # этап
-    time_per_unit: int  # время на позицию
+    operation_code: Optional[int] = None  # код операции
+    operation_name: Optional[str] = None  # наименование операции
+    quantity_per_unit: int = 1  # количество в 1 изделии
+    total_quantity: int = 1  # итоговое количество
+    time_per_unit: int  # время на позицию (уже умножено на total_quantity)
 
 
 class EstimateResponse(BaseModel):
